@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Hospital System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <h1>🏥 Hospital System</h1>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="login.html">Login</a></li>
+        </ul>
+    </nav>
+
+    <div style="max-width:400px; margin:50px auto;">
+
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <button onclick="showTab('login')" class="btn">Login</button>
+            <button onclick="showTab('register')" class="btn">Register</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginTab">
+            <form>
+                <h2>Login</h2>
+                <select id="loginRole">
+                    <option value="patient">Patient</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <input type="email" id="loginEmail" placeholder="Email" />
+                <input type="password" id="loginPassword" placeholder="Password" />
+                <div id="adminKeyDiv" style="display:none;">
+                    <input type="password" id="adminKey" placeholder="Admin Secret Key" />
+                </div>
+                <button type="button" onclick="login()">Login</button>
+                <div id="loginMsg" class="message"></div>
+            </form>
+        </div>
+
+        <!-- REGISTER (patients only) -->
+        <div id="registerTab" style="display:none;">
+            <form>
+                <h2>Patient Register</h2>
+                <input type="text" id="regName" placeholder="Full Name" />
+                <input type="email" id="regEmail" placeholder="Email" />
+                <input type="password" id="regPassword" placeholder="Password" />
+                <button type="button" onclick="register()">Register</button>
+                <div id="registerMsg" class="message"></div>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+        const ADMIN_SECRET = "admin123";
+
+        document.getElementById("loginRole").addEventListener("change", function() {
+            document.getElementById("adminKeyDiv").style.display =
+                this.value === "admin" ? "block" : "none";
+        });
+
+        function showTab(tab) {
+            document.getElementById("loginTab").style.display = tab === "login" ? "block" : "none";
+            document.getElementById("registerTab").style.display = tab === "register" ? "block" : "none";
+        }
+
+        async function login() {
+            const role = document.getElementById("loginRole").value;
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const el = document.getElementById("loginMsg");
+
+            if (role === "admin") {
+                const key = document.getElementById("adminKey").value;
+                if (key !== ADMIN_SECRET) {
+                    el.textContent = "Invalid admin secret key!";
+                    el.className = "message error";
+                    return;
+                }
+            }
+
+            const res = await fetch(`${API}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: "test", email, password, role })
+            });
+            const result = await res.json();
+
+            if (result.message === "Login successful") {
+                localStorage.setItem("role", result.role);
+                window.location.href = result.role === "admin" ? "dashboard.html" : "appointments.html";
+            } else {
+                el.textContent = "Invalid credentials";
+                el.className = "message error";
+            }
+        }
+
+        async function register() {
+            const data = {
+                name: document.getElementById("regName").value,
+                email: document.getElementById("regEmail").value,
+                password: document.getElementById("regPassword").value,
+                role: "patient"
+            };
+            const res = await fetch(`${API}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            const el = document.getElementById("registerMsg");
+            el.textContent = result.message;
+            el.className = "message success";
+        }
+    </script>
+
+</body>
+</html>

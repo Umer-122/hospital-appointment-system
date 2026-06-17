@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointments - Hospital System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <h1>🏥 Hospital System</h1>
+        <ul>
+            <li><a href="appointments.html">Appointments</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+
+    <form>
+        <h2>Book Appointment</h2>
+        <input type="text" id="patient_id" placeholder="Patient ID" />
+        <input type="text" id="doctor_id" placeholder="Doctor ID" />
+        <input type="date" id="appointment_date" />
+        <input type="time" id="appointment_time" />
+        <select id="status">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+        </select>
+        <button type="button" onclick="bookAppointment()">Book Appointment</button>
+        <div id="message" class="message"></div>
+    </form>
+
+    <h2 style="text-align:center; padding: 20px; color: #2c3e50;">All Appointments</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Patient ID</th>
+                <th>Doctor ID</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentTable"></tbody>
+    </table>
+
+    <script>
+        // Global function to clear session storage and log out safely
+        function logout() {
+            localStorage.removeItem("role");
+            window.location.href = "login.html";
+        }
+
+        const API = "http://127.0.0.1:8000";
+
+        async function bookAppointment() {
+            const data = {
+                patient_id: document.getElementById("patient_id").value,
+                doctor_id: document.getElementById("doctor_id").value,
+                appointment_date: document.getElementById("appointment_date").value,
+                appointment_time: document.getElementById("appointment_time").value,
+                status: document.getElementById("status").value
+            };
+            const res = await fetch(`${API}/appointments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            document.getElementById("message").textContent = result.message;
+            document.getElementById("message").className = "message success";
+            loadAppointments();
+        }
+
+        async function deleteAppointment(id) {
+            await fetch(`${API}/appointments/${id}`, { method: "DELETE" });
+            loadAppointments();
+        }
+
+        async function loadAppointments() {
+            const res = await fetch(`${API}/appointments`);
+            const data = await res.json();
+            const tbody = document.getElementById("appointmentTable");
+            tbody.innerHTML = "";
+            data.forEach(a => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${a.id}</td>
+                        <td>${a.patient_id}</td>
+                        <td>${a.doctor_id}</td>
+                        <td>${a.appointment_date}</td>
+                        <td>${a.appointment_time}</td>
+                        <td>${a.status}</td>
+                        <td><button onclick="deleteAppointment('${a.id}')">Delete</button></td>
+                    </tr>`;
+            });
+        }
+
+        loadAppointments();
+    </script>
+
+</body>
+</html>
