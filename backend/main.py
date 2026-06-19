@@ -93,3 +93,8 @@ async def dashboard_stats():
     patients = await db["patients"].count_documents({})
     appointments = await db["appointments"].count_documents({})
     return {"doctors": doctors, "patients": patients, "appointments": appointments}
+
+# ─── START SERVER ───
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
