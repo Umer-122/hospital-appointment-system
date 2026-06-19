@@ -4,6 +4,8 @@ from database import db
 from models import User, Doctor, Patient, Appointment
 from schemas import user_schema, doctor_schema, patient_schema, appointment_schema
 from bson import ObjectId
+import os
+import uvicorn
 
 app = FastAPI()
 
@@ -96,5 +98,5 @@ async def dashboard_stats():
 
 # ─── START SERVER ───
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
